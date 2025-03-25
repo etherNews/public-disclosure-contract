@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/public-disclosure-contract/static/css/main.b1872f0d.css",
+    "main.js": "/public-disclosure-contract/static/js/main.ae25dae2.js",
+    "index.html": "/public-disclosure-contract/index.html",
+    "main.b1872f0d.css.map": "/public-disclosure-contract/static/css/main.b1872f0d.css.map",
+    "main.ae25dae2.js.map": "/public-disclosure-contract/static/js/main.ae25dae2.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.b1872f0d.css",
+    "static/js/main.ae25dae2.js"
+  ]
+}
