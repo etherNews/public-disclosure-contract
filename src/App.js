@@ -42,7 +42,7 @@ function App() {
           const deployedNetwork = PublicDisclosureContract.networks[networkId];
           const contractInstance = new web3Instance.eth.Contract(
             PublicDisclosureContract.abi,
-            deployedNetwork && deployedNetwork.address
+            "0xE4f4f82b2096A8e1AD3eEE6AAD6DB7257f34390b" // 직접 주소 입력
           );
           
           setContract(contractInstance);
@@ -509,7 +509,7 @@ function App() {
       
       <footer className="app-footer">
         <div className="footer-content">
-          <p>&copy; 2025 공익 정보 공개 플랫폼 | <a href="https://github.com/etherNews/public-disclosure-contract" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+          <p>&copy;  공익 정보 공개 플랫폼 | <a href="https://github.com/etherNews/public-disclosure-contract" target="_blank" rel="noopener noreferrer">GitHub</a></p>
           <p className="footer-disclaimer">이 플랫폼은 이더리움 블록체인에 기반하여 분산화된 정보 공개를 제공합니다. 모든 거래는 블록체인에 영구적으로 기록됩니다.</p>
         </div>
       </footer>
