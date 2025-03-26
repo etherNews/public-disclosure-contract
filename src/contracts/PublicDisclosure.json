@@ -1,6 +1,6 @@
 {
     "abi": [
-        [
+        
             {
                 "inputs": [
                     {
@@ -436,7 +436,7 @@
                 "stateMutability": "view",
                 "type": "function"
             }
-        ]
+        
     ],
     "networks": {
       "1": {
