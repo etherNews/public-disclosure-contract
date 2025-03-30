@@ -26,452 +26,6 @@ function App() {
   const [cleanupInProgress, setCleanupInProgress] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
 
-
-  // App.js 상단에 추가
-  const CONTRACT_ABI = [
-      {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": true,
-            "internalType": "uint256",
-            "name": "postId",
-            "type": "uint256"
-          }
-        ],
-        "name": "PostExpired",
-        "type": "event"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": true,
-            "internalType": "uint256",
-            "name": "postId",
-            "type": "uint256"
-          },
-          {
-            "indexed": true,
-            "internalType": "address",
-            "name": "author",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "fee",
-            "type": "uint256"
-          },
-          {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "expiryTime",
-            "type": "uint256"
-          }
-        ],
-        "name": "PostPublished",
-        "type": "event"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": true,
-            "internalType": "uint256",
-            "name": "postId",
-            "type": "uint256"
-          },
-          {
-            "indexed": true,
-            "internalType": "address",
-            "name": "remover",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "address",
-            "name": "paymentReceiver",
-            "type": "address"
-          }
-        ],
-        "name": "PostRemoved",
-        "type": "event"
-      },
-      {
-        "anonymous": false,
-        "inputs": [
-          {
-            "indexed": true,
-            "internalType": "uint256",
-            "name": "postId",
-            "type": "uint256"
-          },
-          {
-            "indexed": true,
-            "internalType": "address",
-            "name": "renewer",
-            "type": "address"
-          },
-          {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "expiryTime",
-            "type": "uint256"
-          }
-        ],
-        "name": "PostRenewed",
-        "type": "event"
-      },
-      {
-        "inputs": [],
-        "name": "admin",
-        "outputs": [
-          {
-            "internalType": "address",
-            "name": "",
-            "type": "address"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_max",
-            "type": "uint256"
-          }
-        ],
-        "name": "cleanupExpiredPosts",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "name": "freeRepublish",
-        "outputs": [
-          {
-            "internalType": "bool",
-            "name": "",
-            "type": "bool"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_page",
-            "type": "uint256"
-          }
-        ],
-        "name": "getActivePostIds",
-        "outputs": [
-          {
-            "internalType": "uint256[]",
-            "name": "",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256",
-            "name": "totalPages",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "getActivePostsCount",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_postId",
-            "type": "uint256"
-          }
-        ],
-        "name": "getPost",
-        "outputs": [
-          {
-            "internalType": "address",
-            "name": "author",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "link",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "publicationFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "expiryTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isActive",
-            "type": "bool"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_postId",
-            "type": "uint256"
-          }
-        ],
-        "name": "getPostContent",
-        "outputs": [
-          {
-            "internalType": "string",
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "link",
-            "type": "string"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_postId",
-            "type": "uint256"
-          }
-        ],
-        "name": "getPostFee",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256[]",
-            "name": "_postIds",
-            "type": "uint256[]"
-          }
-        ],
-        "name": "getPostsBatch",
-        "outputs": [
-          {
-            "internalType": "address[]",
-            "name": "authors",
-            "type": "address[]"
-          },
-          {
-            "internalType": "string[]",
-            "name": "titles",
-            "type": "string[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "fees",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "uint256[]",
-            "name": "expiryTimes",
-            "type": "uint256[]"
-          },
-          {
-            "internalType": "bool[]",
-            "name": "activeStates",
-            "type": "bool[]"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "name": "posts",
-        "outputs": [
-          {
-            "internalType": "address",
-            "name": "author",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "content",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "link",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "publicationFee",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "expiryTime",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bool",
-            "name": "isActive",
-            "type": "bool"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "string",
-            "name": "_title",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_content",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "_link",
-            "type": "string"
-          }
-        ],
-        "name": "publishPost",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_postId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "address payable",
-            "name": "_paymentReceiver",
-            "type": "address"
-          }
-        ],
-        "name": "removePost",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-      },
-      {
-        "inputs": [
-          {
-            "internalType": "uint256",
-            "name": "_postId",
-            "type": "uint256"
-          }
-        ],
-        "name": "renewPost",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "totalPosts",
-        "outputs": [
-          {
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-          }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-      },
-      {
-        "inputs": [],
-        "name": "withdrawFunds",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-      }
-    ];
-  const CONTRACT_ADDRESS = "0x7f27764E6811d17636f9721463bb75f78cF09b17";
-  const contractInstance = new web3Instance.eth.Contract(
-    CONTRACT_ABI,
-    CONTRACT_ADDRESS
-  );
-
-
   useEffect(() => {
     const init = async () => {
       // Connect to Web3
@@ -485,41 +39,48 @@ function App() {
           setAccount(accounts[0]);
           
           // Load contract - fix the contract initialization
+          // Load contract
           try {
+            // 하드코딩된 주소 사용 (새 주소로 업데이트)
+            const contractAddress = "0x7f27764E6811d17636f9721463bb75f78cF09b17";
+            
+            // 디버깅을 위한 로그 추가
+            console.log("Contract ABI:", PublicDisclosureContract.abi);
+            
             const contractInstance = new web3Instance.eth.Contract(
               PublicDisclosureContract.abi,
-              "0x7f27764E6811d17636f9721463bb75f78cF09b17"
+              contractAddress
             );
             
+            // 계약 인스턴스 디버깅
+            console.log("Contract instance:", contractInstance);
+            console.log("Contract methods:", contractInstance.methods);
+            
             setContract(contractInstance);
-
-            // Test if contract methods are accessible
+            
+            // 계약과 연결되었는지 확인하기 위해 간단한 호출 시도
             try {
-              // Try to call a read-only function to check connection
               const totalPosts = await contractInstance.methods.totalPosts().call();
               console.log("Total posts:", totalPosts);
               
-              // Check if user is admin to show cleanup button
+              // 성공하면 admin 확인 진행
               try {
                 const admin = await contractInstance.methods.admin().call();
                 setShowCleanupButton(accounts[0].toLowerCase() === admin.toLowerCase());
               } catch (adminError) {
-                console.warn("Could not check admin status:", adminError);
-                // Don't show cleanup button if we can't check
-                setShowCleanupButton(false);
+                console.error("Admin check failed:", adminError);
+                // admin 메소드가 없어도 계속 진행
               }
               
-              // Load posts only if contract connection was successful
+              // 게시물 로드
               loadPosts(contractInstance, 0);
             } catch (methodError) {
               console.error("Contract method call failed:", methodError);
-              setConnectionError("스마트 계약 연결에 실패했습니다. 네트워크를 확인하세요.");
-              setLoading(false);
+              alert("스마트 계약 메소드를 호출할 수 없습니다. 네트워크와 ABI를 확인하세요.");
             }
           } catch (contractError) {
             console.error("Contract initialization failed:", contractError);
-            setConnectionError("스마트 계약 초기화에 실패했습니다");
-            setLoading(false);
+            alert("스마트 계약 초기화에 실패했습니다.");
           }
         } catch (error) {
           console.error("Could not connect to wallet", error);
