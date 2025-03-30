@@ -42,7 +42,7 @@ function App() {
           try {
             const contractInstance = new web3Instance.eth.Contract(
               PublicDisclosureContract.abi,
-              "0xE4f4f82b2096A8e1AD3eEE6AAD6DB7257f34390b"
+              "0x7f27764E6811d17636f9721463bb75f78cF09b17"
             );
             
             setContract(contractInstance);
