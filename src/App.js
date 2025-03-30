@@ -24,6 +24,7 @@ function App() {
   const [renewFee, setRenewFee] = useState('');
   const [showCleanupButton, setShowCleanupButton] = useState(false);
   const [cleanupInProgress, setCleanupInProgress] = useState(false);
+  const [connectionError, setConnectionError] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -37,26 +38,51 @@ function App() {
           const accounts = await web3Instance.eth.getAccounts();
           setAccount(accounts[0]);
           
-          // Load contract
-          const networkId = await web3Instance.eth.net.getId();
-          const deployedNetwork = PublicDisclosureContract.networks[networkId];
-          const contractInstance = new web3Instance.eth.Contract(
-            PublicDisclosureContract.abi,
-            "0xE4f4f82b2096A8e1AD3eEE6AAD6DB7257f34390b" // 직접 주소 입력
-          );
-          
-          setContract(contractInstance);
-          
-          // Check if user is admin to show cleanup button
-          const admin = await contractInstance.methods.admin().call();
-          setShowCleanupButton(accounts[0].toLowerCase() === admin.toLowerCase());
-          
-          loadPosts(contractInstance, 0);
+          // Load contract - fix the contract initialization
+          try {
+            const contractInstance = new web3Instance.eth.Contract(
+              PublicDisclosureContract.abi,
+              "0xE4f4f82b2096A8e1AD3eEE6AAD6DB7257f34390b"
+            );
+            
+            setContract(contractInstance);
+
+            // Test if contract methods are accessible
+            try {
+              // Try to call a read-only function to check connection
+              const totalPosts = await contractInstance.methods.totalPosts().call();
+              console.log("Total posts:", totalPosts);
+              
+              // Check if user is admin to show cleanup button
+              try {
+                const admin = await contractInstance.methods.admin().call();
+                setShowCleanupButton(accounts[0].toLowerCase() === admin.toLowerCase());
+              } catch (adminError) {
+                console.warn("Could not check admin status:", adminError);
+                // Don't show cleanup button if we can't check
+                setShowCleanupButton(false);
+              }
+              
+              // Load posts only if contract connection was successful
+              loadPosts(contractInstance, 0);
+            } catch (methodError) {
+              console.error("Contract method call failed:", methodError);
+              setConnectionError("스마트 계약 연결에 실패했습니다. 네트워크를 확인하세요.");
+              setLoading(false);
+            }
+          } catch (contractError) {
+            console.error("Contract initialization failed:", contractError);
+            setConnectionError("스마트 계약 초기화에 실패했습니다");
+            setLoading(false);
+          }
         } catch (error) {
           console.error("Could not connect to wallet", error);
+          setConnectionError("지갑 연결에 실패했습니다");
+          setLoading(false);
         }
       } else {
-        alert("메타마스크를 설치해주세요!");
+        setConnectionError("메타마스크를 설치해주세요!");
+        setLoading(false);
       }
     };
     
@@ -66,6 +92,14 @@ function App() {
   const loadPosts = async (contractInstance, page) => {
     setLoading(true);
     try {
+      // First check if the method exists to avoid errors
+      if (typeof contractInstance.methods.getActivePostIds !== 'function') {
+        console.error("getActivePostIds method not found on contract");
+        setConnectionError("계약에서 메서드를 찾을 수 없습니다.");
+        setLoading(false);
+        return;
+      }
+
       // Get paginated active post IDs
       const result = await contractInstance.methods.getActivePostIds(page).call();
       const activePostIds = result[0];
@@ -105,6 +139,7 @@ function App() {
       setPosts(postsData);
     } catch (error) {
       console.error("Error loading posts", error);
+      setConnectionError("게시물을 불러오는 데 실패했습니다");
     }
     setLoading(false);
   };
@@ -126,6 +161,11 @@ function App() {
       const { title, content, link, fee } = formData;
       const weiValue = web3.utils.toWei(fee, 'ether');
       
+      // Check if the publishPost method exists
+      if (typeof contract.methods.publishPost !== 'function') {
+        throw new Error("publishPost method not found on contract");
+      }
+      
       await contract.methods.publishPost(title, content, link)
         .send({ from: account, value: weiValue });
       
@@ -141,6 +181,7 @@ function App() {
       loadPosts(contract, currentPage);
     } catch (error) {
       console.error("Error publishing post", error);
+      alert("게시물 발행에 실패했습니다: " + error.message);
     }
   };
 
@@ -149,6 +190,11 @@ function App() {
     
     try {
       const weiValue = web3.utils.toWei(removeFee, 'ether');
+      
+      // Check if the removePost method exists
+      if (typeof contract.methods.removePost !== 'function') {
+        throw new Error("removePost method not found on contract");
+      }
       
       await contract.methods.removePost(removePostId, paymentReceiver)
         .send({ from: account, value: weiValue });
@@ -162,6 +208,7 @@ function App() {
       loadPosts(contract, currentPage);
     } catch (error) {
       console.error("Error removing post", error);
+      alert("게시물 삭제에 실패했습니다: " + error.message);
     }
   };
 
@@ -170,6 +217,11 @@ function App() {
     
     try {
       const weiValue = web3.utils.toWei(renewFee, 'ether');
+      
+      // Check if the renewPost method exists
+      if (typeof contract.methods.renewPost !== 'function') {
+        throw new Error("renewPost method not found on contract");
+      }
       
       await contract.methods.renewPost(renewPostId)
         .send({ from: account, value: weiValue });
@@ -182,12 +234,18 @@ function App() {
       loadPosts(contract, currentPage);
     } catch (error) {
       console.error("Error renewing post", error);
+      alert("게시물 갱신에 실패했습니다: " + error.message);
     }
   };
 
   const handleCleanupExpired = async () => {
     try {
       setCleanupInProgress(true);
+      
+      // Check if the cleanupExpiredPosts method exists
+      if (typeof contract.methods.cleanupExpiredPosts !== 'function') {
+        throw new Error("cleanupExpiredPosts method not found on contract");
+      }
       
       // Cleanup up to 20 expired posts at once
       await contract.methods.cleanupExpiredPosts(20)
@@ -199,6 +257,7 @@ function App() {
       setCleanupInProgress(false);
     } catch (error) {
       console.error("Error cleaning up posts", error);
+      alert("만료된 게시물 정리에 실패했습니다: " + error.message);
       setCleanupInProgress(false);
     }
   };
@@ -216,6 +275,7 @@ function App() {
       alert("후원이 성공적으로 완료되었습니다!");
     } catch (error) {
       console.error("Error sending donation", error);
+      alert("후원 전송에 실패했습니다: " + error.message);
     }
   };
 
@@ -274,6 +334,22 @@ function App() {
         </div>
       </div>
       
+      {connectionError && (
+        <div className="error-message form-card">
+          <h2>연결 오류</h2>
+          <p>{connectionError}</p>
+          <p>다음을 확인해 주세요:</p>
+          <ul>
+            <li>메타마스크가 설치되어 있고 올바른 네트워크에 연결되어 있는지</li>
+            <li>스마트 계약 주소가 올바른지</li>
+            <li>인터넷 연결이 안정적인지</li>
+          </ul>
+          <button onClick={() => window.location.reload()} className="button-primary">
+            새로고침
+          </button>
+        </div>
+      )}
+      
       <main className="main-content">
         <div className="forms-container">
           <section className="form-card publish-section">
@@ -330,7 +406,7 @@ function App() {
                 </div>
               </div>
               
-              <button type="submit" className="button-primary">게시하기</button>
+              <button type="submit" className="button-primary" disabled={!contract}>게시하기</button>
             </form>
           </section>
           
@@ -377,7 +453,7 @@ function App() {
                   </div>
                 </div>
                 
-                <button type="submit" className="button-danger">삭제하기</button>
+                <button type="submit" className="button-danger" disabled={!contract}>삭제하기</button>
               </form>
             </section>
             
@@ -412,7 +488,7 @@ function App() {
                   </div>
                 </div>
                 
-                <button type="submit" className="button-secondary">갱신하기</button>
+                <button type="submit" className="button-secondary" disabled={!contract}>갱신하기</button>
               </form>
             </section>
           </div>
@@ -509,7 +585,7 @@ function App() {
       
       <footer className="app-footer">
         <div className="footer-content">
-          <p>&copy;  공익 정보 공개 플랫폼 | <a href="https://github.com/etherNews/public-disclosure-contract" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+          <p>&copy; 공익 정보 공개 플랫폼 | <a href="https://github.com/etherNews/public-disclosure-contract" target="_blank" rel="noopener noreferrer">GitHub</a></p>
           <p className="footer-disclaimer">이 플랫폼은 이더리움 블록체인에 기반하여 분산화된 정보 공개를 제공합니다. 모든 거래는 블록체인에 영구적으로 기록됩니다.</p>
         </div>
       </footer>
